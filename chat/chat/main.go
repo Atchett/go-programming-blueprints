@@ -27,13 +27,18 @@ func (t *templateHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	t.templ.Execute(w, r)
 }
 
+const assetPath = "/assets/"
+
 func main() {
 	// get the addr flag, set to 8080 by default
 	var addr = flag.String("addr", ":8080", "The address of the application.")
 	flag.Parse() // parse the flags
 	r := newRoom()
+	// serve the assets
+	http.Handle("/assets/", http.StripPrefix("/assets", http.FileServer(http.Dir(assetPath))))
 	//r.tracer = trace.New(os.Stdout)
-	http.Handle("/", &templateHandler{filename: "chat.html"})
+	// MustAuth triggers the authentication when user tries to access
+	http.Handle("/", MustAuth(&templateHandler{filename: "chat.html"}))
 	http.Handle("/room", r)
 	// get the room going as a go routine
 	go r.run()
