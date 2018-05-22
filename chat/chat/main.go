@@ -27,7 +27,7 @@ func (t *templateHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	t.templ.Execute(w, r)
 }
 
-const assetPath = "/assets/"
+const assetPath = "C:/Users/johns/Documents/go/src/bitbucket.org/johnpersonal/goblueprints/chat/chat/assets"
 
 func main() {
 	// get the addr flag, set to 8080 by default
@@ -38,7 +38,11 @@ func main() {
 	http.Handle("/assets/", http.StripPrefix("/assets", http.FileServer(http.Dir(assetPath))))
 	//r.tracer = trace.New(os.Stdout)
 	// MustAuth triggers the authentication when user tries to access
-	http.Handle("/", MustAuth(&templateHandler{filename: "chat.html"}))
+	http.Handle("/chat", MustAuth(&templateHandler{filename: "chat.html"}))
+	http.Handle("/login", &templateHandler{filename: "login.html"})
+	// note the HandleFunc function to handle the loginHandler function
+	// as loginHandler doesn't store any state, it's not an object
+	http.HandleFunc("/auth/", loginHandler)
 	http.Handle("/room", r)
 	// get the room going as a go routine
 	go r.run()
