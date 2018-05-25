@@ -70,13 +70,13 @@ func loginHandler(w http.ResponseWriter, r *http.Request) {
 			// get the location where we must send users
 			// to start the authorization process
 			// (nil, nil) arguments are for state and options - not in use for this app
-			loginUrl, err := provider.GetBeginAuthURL(nil, nil)
+			loginURL, err := provider.GetBeginAuthURL(nil, nil)
 			if err != nil {
 				// if there is an error write out with a non 200 code
 				http.Error(w, fmt.Sprintf("Error when trying to GetBeginAuthURL %s: %s", provider, err), http.StatusInternalServerError)
 				return
 			}
-			w.Header().Set("Location", loginUrl)
+			w.Header().Set("Location", loginURL)
 			w.WriteHeader(http.StatusTemporaryRedirect)
 		default:
 			// write to the response (i.e. the page)
