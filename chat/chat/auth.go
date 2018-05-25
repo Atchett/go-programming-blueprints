@@ -1,10 +1,13 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 	"log"
 	"net/http"
 	"strings"
+
+	"github.com/stretchr/gomniauth"
 )
 
 // implements the ServeHTTP method
@@ -42,18 +45,47 @@ func MustAuth(handler http.Handler) http.Handler {
 // format: /auth/{action}/{provider}
 func loginHandler(w http.ResponseWriter, r *http.Request) {
 	segs := strings.Split(r.URL.Path, "/")
-	if len(segs) < 2 {
+	// tidy up the output so we can see what we are getting
+	outVal, _ := json.Marshal(segs)
+	segsLength := len(segs)
+	// log the number of degments
+	log.Println("Num segs : ", segsLength)
+	if segsLength >= 4 {
+		action := strings.ToLower(segs[2])
+		provider := strings.ToLower(segs[3])
+		switch action {
+		case "login":
+			// OLD - log to the console
+			/* log.Println("TODO: handle login for", provider)
+			log.Println("Segs", string(outVal)) */
+
+			// get the provider that matches the object specified in the URL
+			// e.g. google or facebook
+			provider, err := gomniauth.Provider(provider)
+			if err != nil {
+				// if there is an error write out with a non 200 code
+				http.Error(w, fmt.Sprintf("Error when trying to get provider %s: %s", provider, err), http.StatusBadRequest)
+				return
+			}
+			// get the location where we must send users
+			// to start the authorization process
+			// (nil, nil) arguments are for state and options - not in use for this app
+			loginUrl, err := provider.GetBeginAuthURL(nil, nil)
+			if err != nil {
+				// if there is an error write out with a non 200 code
+				http.Error(w, fmt.Sprintf("Error when trying to GetBeginAuthURL %s: %s", provider, err), http.StatusInternalServerError)
+				return
+			}
+			w.Header().Set("Location", loginUrl)
+			w.WriteHeader(http.StatusTemporaryRedirect)
+		default:
+			// write to the response (i.e. the page)
+			w.WriteHeader(http.StatusNotFound)
+			fmt.Fprintf(w, "Auth action %s not supported.", action)
+		}
+	} else {
 		w.WriteHeader(http.StatusNotFound)
-		fmt.Fprintln(w, "Too few parameters")
-		return
+		fmt.Fprintf(w, "Too few params - %v", string(outVal))
 	}
-	action := strings.ToLower(segs[2])
-	provider := strings.ToLower(segs[3])
-	switch action {
-	case "login":
-		log.Println("TODO: handle login for", provider)
-	default:
-		w.WriteHeader(http.StatusNotFound)
-		fmt.Fprintf(w, "Auth action %s not supported", action)
-	}
+
 }
