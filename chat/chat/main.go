@@ -8,6 +8,8 @@ import (
 	"sync"
 	"text/template"
 
+	"github.com/stretchr/objx"
+
 	"github.com/stretchr/gomniauth"
 	"github.com/stretchr/gomniauth/providers/facebook"
 	"github.com/stretchr/gomniauth/providers/google"
@@ -27,8 +29,14 @@ func (t *templateHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		// parse the template in the templates folder
 		t.templ = template.Must(template.ParseFiles(filepath.Join("templates", t.filename)))
 	})
+	data := map[string]interface{}{
+		"Host": r.Host,
+	}
+	if authCookie, err := r.Cookie("auth"); err == nil {
+		data["UserData"] = objx.MustFromBase64(authCookie.Value)
+	}
 	// render itself using the data that can be extracted from the http.Request
-	t.templ.Execute(w, r)
+	t.templ.Execute(w, data)
 }
 
 const assetPath = "C:/Users/johns/Documents/go/src/bitbucket.org/johnpersonal/goblueprints/chat/chat/assets"

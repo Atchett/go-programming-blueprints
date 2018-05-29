@@ -7,6 +7,8 @@ import (
 	"net/http"
 	"strings"
 
+	"github.com/stretchr/objx"
+
 	"github.com/stretchr/gomniauth"
 )
 
@@ -77,6 +79,38 @@ func loginHandler(w http.ResponseWriter, r *http.Request) {
 				return
 			}
 			w.Header().Set("Location", loginURL)
+			w.WriteHeader(http.StatusTemporaryRedirect)
+		case "callback":
+			provider, err := gomniauth.Provider(provider)
+			if err != nil {
+				http.Error(w, fmt.Sprintf("Error when trying to get provider %s: %s", provider, err), http.StatusBadRequest)
+				return
+			}
+			// lookup auth provider and call it's CompletAuth method
+			creds, err := provider.CompleteAuth(objx.MustFromURLQuery(r.URL.RawQuery))
+			if err != nil {
+				http.Error(w, fmt.Sprintf("Error when trying to complete auth for %s: %s", provider, err), http.StatusInternalServerError)
+				return
+			}
+			// relevant GetUser method from the provider
+			user, err := provider.GetUser(creds)
+			if err != nil {
+				http.Error(w, fmt.Sprintf("Error when trying to get user from %s: %s", provider, err), http.StatusInternalServerError)
+				return
+			}
+			authCookieValue := objx.New(map[string]interface{}{
+				"name": user.Name(),
+				// base encode the name field
+				// ensure it won't contain any unpredictable characters
+			}).MustBase64()
+			// set the cookie
+			http.SetCookie(w, &http.Cookie{
+				Name:  "auth",
+				Value: authCookieValue,
+				Path:  "/",
+			})
+			// redirect the user to the chat page
+			w.Header().Set("Location", "/chat")
 			w.WriteHeader(http.StatusTemporaryRedirect)
 		default:
 			// write to the response (i.e. the page)
