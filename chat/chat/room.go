@@ -6,6 +6,7 @@ import (
 
 	"bitbucket.org/johnpersonal/goblueprints/chat/trace"
 	"github.com/gorilla/websocket"
+	"github.com/stretchr/objx"
 )
 
 type room struct {
@@ -79,11 +80,19 @@ func (r *room) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 		log.Fatal("ServeHTTP:", err)
 		return
 	}
+	// get the data from the cookie
+	authCookie, err := req.Cookie("auth")
+	if err != nil {
+		log.Fatal("Failed to get auth cookie:", err)
+		return
+	}
 	// create the client
+	// add the user data to the client
 	client := &client{
-		socket: socket,
-		send:   make(chan *message, messageBufferSize),
-		room:   r,
+		socket:   socket,
+		send:     make(chan *message, messageBufferSize),
+		room:     r,
+		userData: objx.MustFromBase64(authCookie.Value),
 	}
 	// pass client to the join channel
 	r.join <- client

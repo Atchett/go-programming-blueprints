@@ -3,7 +3,6 @@ package main
 import (
 	"encoding/json"
 	"fmt"
-	"log"
 	"net/http"
 	"strings"
 
@@ -51,7 +50,7 @@ func loginHandler(w http.ResponseWriter, r *http.Request) {
 	outVal, _ := json.Marshal(segs)
 	segsLength := len(segs)
 	// log the number of degments
-	log.Println("Num segs : ", segsLength)
+	//log.Println("Num segs : ", segsLength)
 	if segsLength >= 4 {
 		action := strings.ToLower(segs[2])
 		provider := strings.ToLower(segs[3])

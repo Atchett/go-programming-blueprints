@@ -18,6 +18,8 @@
         <input type="submit" value="send" />
     </form>
     <script src="//ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
+    <script src="/assets/prettyDate.js"></script>
+
     <script>
         $(function(){
             
@@ -32,7 +34,7 @@
                 }
                 // call to socket.send triggered
                 // send messages to the server
-                socket.send(msgBox.val());
+                socket.send(JSON.stringify({"Message" : msgBox.val()}));
                 msgBox.val("");
                 return false;
             });
@@ -47,7 +49,15 @@
                 }
                 // handle socket message
                 socket.onmessage = function(e){
-                    messages.append($("<li>").text(e.data));
+                    var msg = JSON.parse(e.data);
+                    messages.append(
+                        $("<li>").append(
+                            $("<strong>").text(msg.Name + ": "),
+                            $("<span>").text(msg.Message),
+                            $("<br/>"),
+                            $("<span>").text(prettyDate(msg.When))
+                        )
+                    );
                 }
             }
         });
