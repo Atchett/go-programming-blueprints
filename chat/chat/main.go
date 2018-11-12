@@ -8,11 +8,10 @@ import (
 	"sync"
 	"text/template"
 
-	"github.com/stretchr/objx"
-
 	"github.com/stretchr/gomniauth"
 	"github.com/stretchr/gomniauth/providers/facebook"
 	"github.com/stretchr/gomniauth/providers/google"
+	"github.com/stretchr/objx"
 )
 
 // templ represents a single template

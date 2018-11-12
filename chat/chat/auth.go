@@ -6,9 +6,8 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/stretchr/objx"
-
 	"github.com/stretchr/gomniauth"
+	"github.com/stretchr/objx"
 )
 
 // implements the ServeHTTP method
